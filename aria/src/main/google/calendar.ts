@@ -82,11 +82,12 @@ export async function writeEvent(params: {
     console.log(`[google-cal] Created calendar: ${params.calendarName}`)
   }
 
-  // Deduplication: check for an existing event with the same title in the same time window
+  // Deduplication: check for an existing event with the same title in the same time window.
+  // timeMin/timeMax require RFC3339 with timezone info — convert to UTC ISO (ends with "Z").
   const existingRes = await cal.events.list({
     calendarId,
-    timeMin: params.startISO,
-    timeMax: params.endISO,
+    timeMin: new Date(params.startISO).toISOString(),
+    timeMax: new Date(params.endISO).toISOString(),
     singleEvents: true,
     maxResults: 25
   })

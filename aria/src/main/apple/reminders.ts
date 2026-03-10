@@ -1,16 +1,22 @@
-import { execFileSync } from 'child_process'
+import { execFile } from 'child_process'
+import { promisify } from 'util'
 import { v4 as uuidv4 } from 'uuid'
 import type { Task } from '../../shared/types'
 
-function runScript(script: string): string {
+const execFileAsync = promisify(execFile)
+
+async function runScript(script: string): Promise<string> {
   try {
-    return execFileSync('osascript', ['-e', script], {
+    const { stdout } = await execFileAsync('osascript', ['-e', script], {
       encoding: 'utf-8',
-      timeout: 10000
-    }).trim()
+      timeout: 30000
+    })
+    return stdout.trim()
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err)
-    throw new Error(`AppleScript error: ${msg}`)
+    // execFile errors include stderr separately — prefer it for the real AppleScript message
+    const execErr = err as { stderr?: string; message?: string }
+    const detail = execErr.stderr?.trim() || execErr.message || String(err)
+    throw new Error(`AppleScript error: ${detail}`)
   }
 }
 
@@ -32,7 +38,7 @@ function parseTasksOutput(raw: string, listName: string): Task[] {
     .filter((t) => t.title)
 }
 
-export function getTasks(listName: string): Task[] {
+export async function getTasks(listName: string): Promise<Task[]> {
   const script = `
 tell application "Reminders"
   set output to ""
@@ -51,15 +57,15 @@ tell application "Reminders"
   end try
   return output
 end tell`
-  const raw = runScript(script)
+  const raw = await runScript(script)
   return parseTasksOutput(raw, listName)
 }
 
-export function getBacklog(listName: string): Task[] {
+export async function getBacklog(listName: string): Promise<Task[]> {
   return getTasks(listName)
 }
 
-export function completeTask(listName: string, taskTitle: string): void {
+export async function completeTask(listName: string, taskTitle: string): Promise<void> {
   // Escape double quotes in title for AppleScript
   const safeTitle = taskTitle.replace(/"/g, '\\"')
   const safeList = listName.replace(/"/g, '\\"')
@@ -73,10 +79,10 @@ tell application "Reminders"
     end repeat
   end try
 end tell`
-  runScript(script)
+  await runScript(script)
 }
 
-export function taskCount(listName: string): number {
+export async function taskCount(listName: string): Promise<number> {
   const script = `
 tell application "Reminders"
   try
@@ -87,6 +93,6 @@ tell application "Reminders"
     return "0"
   end try
 end tell`
-  const raw = runScript(script)
+  const raw = await runScript(script)
   return parseInt(raw, 10) || 0
 }
