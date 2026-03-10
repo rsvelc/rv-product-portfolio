@@ -185,11 +185,29 @@ export default function ChatPage(): React.ReactElement {
       return
     }
 
+    // Compute task diff against last snapshot (launch or planning session)
+    const currentTitles = fetchedTasks.map((t) => t.title)
+    const diff = await window.api.getTaskDiff(currentTitles).catch(() => null)
+    const hasDiff = diff && (diff.added.length > 0 || diff.removed.length > 0)
+
     const taskListText = formatTasksForGreeting(fetchedTasks)
+
+    let diffSection = ''
+    if (hasDiff) {
+      const lines: string[] = []
+      if (diff.added.length > 0) {
+        lines.push(`➕ Added: ${diff.added.join(', ')}`)
+      }
+      if (diff.removed.length > 0) {
+        lines.push(`➖ Removed: ${diff.removed.join(', ')}`)
+      }
+      diffSection = `\n\nI noticed some changes since your last ${diff.source} session:\n${lines.join('\n')}\n\nAnything I should know about these — new priorities, something you dropped, context that might help me plan better?`
+    }
+
     const greeting: ChatMessage = {
       id: uuidv4(),
       role: 'assistant',
-      content: `Good evening, Ramya! 👋\n\nHere are your tasks for tomorrow:\n\n${taskListText}\n\n—\n\nBefore we plan — how did today go? Tell me what worked and what didn't. Even a sentence helps me schedule better next time.`,
+      content: `Good evening, Ramya! 👋\n\nHere are your tasks for tomorrow:\n\n${taskListText}${diffSection}\n\n—\n\nBefore we plan — how did today go? Tell me what worked and what didn't. Even a sentence helps me schedule better next time.`,
       timestamp: Date.now()
     }
     setMessages([greeting])

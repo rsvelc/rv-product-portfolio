@@ -5,6 +5,7 @@ import { readPreferences } from '../lib/preferences'
 import { readPatterns } from '../lib/patterns'
 import { getTasks } from '../apple/reminders'
 import { readEvents } from '../google/calendar'
+import { loadSnapshot, computeDiff } from '../lib/task-snapshot'
 import type { MindStreamPayload } from '../../shared/types'
 
 let client: Anthropic | null = null
@@ -40,7 +41,12 @@ export function registerMindHandlers(getMainWindow: () => BrowserWindow | null):
           return []
         })
       ])
-      systemPrompt = buildSystemPrompt(prefs, patterns, tasks, events)
+
+      // Compute diff against last snapshot (launch or planning session)
+      const snapshot = loadSnapshot()
+      const taskDiff = snapshot ? computeDiff(tasks, snapshot) : null
+
+      systemPrompt = buildSystemPrompt(prefs, patterns, tasks, events, taskDiff)
     } else {
       systemPrompt = buildSystemPrompt(prefs, patterns, [], [])
     }

@@ -7,6 +7,9 @@ import { registerPreferencesHandlers } from './ipc/preferences'
 import { registerPatternsHandlers } from './ipc/patterns'
 import { registerMindHandlers } from './ipc/mind'
 import { setupCronJobs } from './cron'
+import { readPreferences } from './lib/preferences'
+import { getTasks } from './apple/reminders'
+import { saveSnapshot } from './lib/task-snapshot'
 
 // Load .env.local in development (before app.whenReady)
 const isDev = !app.isPackaged
@@ -37,8 +40,16 @@ function createWindow(): void {
     }
   })
 
-  mainWindow.on('ready-to-show', () => {
+  mainWindow.on('ready-to-show', async () => {
     mainWindow!.show()
+    // Take a launch-time task snapshot for change tracking
+    try {
+      const prefs = readPreferences()
+      const tasks = await getTasks(prefs.remindersListName)
+      saveSnapshot(tasks, 'launch', prefs.remindersListName)
+    } catch (err) {
+      console.warn('[snapshot] Launch snapshot failed:', err)
+    }
   })
 
   // Open external links in browser

@@ -16,6 +16,14 @@ contextBridge.exposeInMainWorld('api', {
   getBacklog: (): Promise<Task[]> => ipcRenderer.invoke('get-backlog'),
   completeTask: (taskTitle: string, listName?: string): Promise<{ ok?: boolean; error?: string }> =>
     ipcRenderer.invoke('complete-task', taskTitle, listName),
+  getTaskDiff: (
+    currentTitles: string[]
+  ): Promise<{
+    added: string[]
+    removed: string[]
+    source: string
+    timestamp: string
+  } | null> => ipcRenderer.invoke('get-task-diff', currentTitles),
 
   // Google auth (triggers consent flow on first run)
   googleAuth: (): Promise<{ ok?: boolean; error?: string }> =>

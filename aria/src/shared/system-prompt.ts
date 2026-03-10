@@ -1,10 +1,17 @@
 import type { Preferences, PatternsData, Task, CalendarEvent } from './types'
 
+interface TaskDiff {
+  added: string[]
+  removed: string[]
+  snapshot: { timestamp: string; source: string }
+}
+
 export function buildSystemPrompt(
   prefs: Preferences,
   patterns: PatternsData,
   tasks: Task[],
-  events: CalendarEvent[]
+  events: CalendarEvent[],
+  taskDiff?: TaskDiff | null
 ): string {
   const now = new Date()
   const todayStr = now.toLocaleDateString('en-US', {
@@ -54,6 +61,25 @@ export function buildSystemPrompt(
           .join('\n')
       : 'No tasks found in the configured Reminders list.'
 
+  const diffBlock = (() => {
+    if (!taskDiff || (taskDiff.added.length === 0 && taskDiff.removed.length === 0)) return null
+    const snapshotDate = new Date(taskDiff.snapshot.timestamp).toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    })
+    const lines: string[] = []
+    if (taskDiff.added.length > 0) {
+      lines.push(`Added:   ${taskDiff.added.map((t) => `• ${t}`).join('\n         ')}`)
+    }
+    if (taskDiff.removed.length > 0) {
+      lines.push(`Removed: ${taskDiff.removed.map((t) => `• ${t}`).join('\n         ')}`)
+    }
+    return `Since last ${taskDiff.snapshot.source} session (${snapshotDate}):\n${lines.join('\n')}`
+  })()
+
   const eventsBlock =
     events.length > 0
       ? events
@@ -101,7 +127,12 @@ WORKING PREFERENCES
 TODAY'S TASKS (from Reminders: "${prefs.remindersListName}")
 ═══════════════════════════════════
 ${tasksBlock}
-
+${diffBlock ? `
+═══════════════════════════════════
+TASK CHANGES SINCE LAST SESSION
+═══════════════════════════════════
+${diffBlock}
+` : ''}
 ═══════════════════════════════════
 CALENDAR — NEXT 3 DAYS
 ═══════════════════════════════════
