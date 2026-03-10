@@ -1,0 +1,55 @@
+import cron from 'node-cron'
+import { BrowserWindow } from 'electron'
+import { taskCount } from './apple/reminders'
+import { sendNotification } from './apple/notifications'
+import { readPreferences } from './lib/preferences'
+
+function parseCronExpression(timeStr: string): string {
+  // timeStr format: "HH:MM" (24h)
+  const [hour, minute] = timeStr.split(':').map(Number)
+  return `${minute} ${hour} * * *`
+}
+
+export function setupCronJobs(getMainWindow: () => BrowserWindow | null): void {
+  const prefs = readPreferences()
+
+  // Early reminder: check if tasks exist, notify if not
+  const earlyExpr = parseCronExpression(prefs.earlyReminderTime)
+  cron.schedule(earlyExpr, () => {
+    try {
+      const prefs = readPreferences() // Re-read in case updated
+      const count = taskCount(prefs.remindersListName)
+      if (count === 0) {
+        sendNotification(
+          "Ramya's Planner",
+          `You haven't added tasks to "${prefs.remindersListName}" yet. Add them before ${prefs.planningTime}!`
+        )
+      }
+    } catch (err) {
+      console.error('[cron] Early reminder check failed:', err)
+    }
+  })
+
+  // Planning session: open/focus window and trigger greeting
+  const planningExpr = parseCronExpression(prefs.planningTime)
+  cron.schedule(planningExpr, () => {
+    try {
+      const win = getMainWindow()
+      if (win) {
+        if (win.isMinimized()) win.restore()
+        win.show()
+        win.focus()
+        // Small delay to let renderer mount before sending the event
+        setTimeout(() => {
+          win.webContents.send('session-start')
+        }, 500)
+      }
+    } catch (err) {
+      console.error('[cron] Planning session trigger failed:', err)
+    }
+  })
+
+  console.log(
+    `[cron] Scheduled: early reminder at ${prefs.earlyReminderTime}, planning at ${prefs.planningTime}`
+  )
+}
