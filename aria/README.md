@@ -1,4 +1,4 @@
-# Ramya's Planner 
+# Aria - Ramya's Planner 
 
 A personal AI-powered nightly planner, built for an ADHD brain.
 
