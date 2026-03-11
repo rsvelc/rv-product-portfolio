@@ -37,7 +37,7 @@
   },
   "build": {
     "appId": "com.ramya.planner",
-    "productName": "aria",
+    "productName": "Aria",
     "mac": {
       "category": "public.app-category.productivity",
       "target": "dmg"

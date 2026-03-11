@@ -22,7 +22,7 @@ export function setupCronJobs(getMainWindow: () => BrowserWindow | null): void {
       const count = await taskCount(prefs.remindersListName)
       if (count === 0) {
         sendNotification(
-          "aria",
+          "Aria",
           `You haven't added tasks to "${prefs.remindersListName}" yet. Add them before ${prefs.planningTime}!`
         )
       }

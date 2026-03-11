@@ -15,7 +15,7 @@ const DEFAULTS: Preferences = {
   goals: [],
   remindersListName: 'Daily Tasks',
   backlogListName: 'Backlog',
-  calendarName: "aria",
+  calendarName: "Aria",
   workingHours: { start: '09:00', end: '21:00' },
   deepWorkTime: 'morning',
   bufferMinutes: 15,
