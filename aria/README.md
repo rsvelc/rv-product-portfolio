@@ -1,8 +1,8 @@
-# Aria - Ramya's Planner 
+# Ramya's Planner
 
 A personal AI-powered nightly planner, built for an ADHD brain.
 
----
+------
 
 ## Why this exists
 
@@ -48,7 +48,7 @@ Where you tell the planner about yourself:
 You'll need Node.js installed. Then:
 
 ```bash
-cd aria-revised
+cd aria
 npm install
 ```
 
