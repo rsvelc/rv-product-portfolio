@@ -1,4 +1,4 @@
-# Ramya's Planner
+# Aria - (Adaptive Reminder & Intelligence Assistant)
 
 A personal AI-powered nightly planner, built for an ADHD brain.
 
@@ -80,7 +80,7 @@ Build it as a standalone app once:
 npm run build:mac
 ```
 
-This creates `Ramya's Planner.app` in the `dist/` folder. Move it to your `/Applications` folder, then add it to **System Settings → General → Login Items**. It will launch silently when your Mac starts, live in the background all day, and open itself at 11:30pm.
+This creates `aria.app` in the `dist/` folder. Move it to your `/Applications` folder, then add it to **System Settings → General → Login Items**. It will launch silently when your Mac starts, live in the background all day, and open itself at 11:30pm.
 
 ---
 

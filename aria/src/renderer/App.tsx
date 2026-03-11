@@ -15,7 +15,7 @@ export default function App(): React.ReactElement {
         {/* macOS traffic lights offset */}
         <div className="w-16 titlebar-nodrag" />
         <span className="text-sm font-medium text-zinc-400 tracking-wide flex-1 text-center">
-          Ramya's Planner
+          aria
         </span>
         <div className="w-16" />
       </div>

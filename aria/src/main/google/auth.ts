@@ -83,7 +83,7 @@ function runConsentFlow(client: OAuth2Client, tokenPath: string): Promise<OAuth2
         res.end(`
           <html><body style="font-family:sans-serif;padding:40px;background:#0f0f0f;color:#fff">
             <h2>✓ Google Calendar connected!</h2>
-            <p>You can close this tab and return to Ramya's Planner.</p>
+            <p>You can close this tab and return to aria.</p>
           </body></html>
         `)
 

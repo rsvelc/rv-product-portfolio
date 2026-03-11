@@ -1,5 +1,5 @@
 {
-  "name": "ramyas-planner",
+  "name": "aria",
   "version": "0.1.0",
   "description": "Ramya's personal AI planner",
   "main": "./out/main/index.js",
@@ -37,7 +37,7 @@
   },
   "build": {
     "appId": "com.ramya.planner",
-    "productName": "Ramya's Planner",
+    "productName": "aria",
     "mac": {
       "category": "public.app-category.productivity",
       "target": "dmg"
