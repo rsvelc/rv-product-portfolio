@@ -1,6 +1,5 @@
-## Welcome to my brain 
-Organised into folders, finally. <br> 
-This is where I put the things I'm building. Some are finished. Some are "finished". All of them started because something annoyed me enough that I decided to just make a thing.
+## Welcome to Ramya Velchuri's Product Portfolio. <br> 
+This is Ramya Velchuri's product portfolio, where I put the things I'm building. Some are finished. Some are "finished". All of them started because something annoyed me enough that I decided just to make a thing.
 
 What's in here: 
 <br>
