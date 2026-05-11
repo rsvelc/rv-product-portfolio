@@ -8,7 +8,6 @@ What's in here:
 <br> 
 A product case study on a problem I couldn't stop thinking about: why do e-commerce buyers regret purchases they were excited about hours earlier, and what can platforms do about it before it becomes a return? PRISM uses a supervised machine learning model to score remorse likelihood from behavioural signals, two LLM agents to decide and generate personalised interventions, and a three-window delivery system to reach buyers at exactly the moment their doubt is forming, before it becomes a return.  Built in PRFAQ format because that's how my brain works after Amazon.
 <br> 
-<br> 
 
 [Agent Telemetry Demo](https://github.com/rsvelc/rv-product-portfolio/tree/main/agent-telemetry/agent-pipeline-demo), <strong> a Multi-Agent Observability Pipeline </strong>
 <br>
