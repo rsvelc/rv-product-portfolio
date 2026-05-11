@@ -11,7 +11,7 @@ A product case study on a problem I couldn't stop thinking about: why do e-comme
 
 [Agent Telemetry Demo](https://github.com/rsvelc/rv-product-portfolio/tree/main/agent-telemetry/agent-pipeline-demo), <strong> a Multi-Agent Observability Pipeline </strong>
 <br>
-A working demo of what it actually looks like to observe AI agents in production — not just logs, but real distributed tracing across a three-agent pipeline. A Research Agent and a Writer Agent talk to each other via HTTP, both making live Claude API calls, while a third Hallucination Checker catches claims the writer invented that the researcher never found. Every LLM call emits token counts, cost, latency, and the actual prompt and response as span attributes — all stitched into one trace tree across services using OpenTelemetry's GenAI semantic conventions. Built because "add some logging" is not a reliability strategy for agents.
+A working demo of what it actually looks like to observe AI agents in production. A real distributed tracing across a three-agent pipeline. A Research Agent and a Writer Agent talk to each other via HTTP, both making live Claude API calls, while a third Hallucination Checker catches claims the writer invented that the researcher never found. Every LLM call emits token counts, cost, latency, and the actual prompt and response as span attributes, all stitched into one trace tree across services using OpenTelemetry's GenAI semantic conventions. Built because "add some logging" is not a reliability strategy for agents.
 <br>
 
 [Aria](https://github.com/rsvelc/rv-product-portfolio/tree/main/aria), <strong> an Adaptive Reminder & Intelligence Assistant </strong>
