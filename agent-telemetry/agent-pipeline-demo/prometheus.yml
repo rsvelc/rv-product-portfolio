@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Scrape metrics that the OTel Collector exposed (OTLP metrics from all 3 services)
+  - job_name: otel-collector
+    static_configs:
+      - targets: ['otel-collector:8889']
+
+  # Direct scrape from each FastAPI /metrics endpoint
+  - job_name: orchestrator
+    static_configs:
+      - targets: ['orchestrator:8080']
+    metrics_path: /metrics
+
+  - job_name: research-agent
+    static_configs:
+      - targets: ['research-agent:8081']
+    metrics_path: /metrics
+
+  - job_name: writer-agent
+    static_configs:
+      - targets: ['writer-agent:8082']
+    metrics_path: /metrics

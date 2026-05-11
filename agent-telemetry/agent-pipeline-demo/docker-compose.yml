@@ -1,0 +1,101 @@
+services:
+
+  # ── Jaeger ───────────────────────────────────────────────────────────────────
+  # Native trace UI — open http://localhost:16686
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"  # Jaeger UI
+
+  # ── Grafana Tempo ─────────────────────────────────────────────────────────────
+  # Trace backend for Grafana dark-mode Explore — open http://localhost:3000
+  tempo:
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo-config.yaml:/etc/tempo.yaml
+    ports:
+      - "3200:3200"   # Tempo HTTP API
+
+  # ── OTel Collector ──────────────────────────────────────────────────────────
+  # Fans out traces to BOTH Jaeger and Tempo
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC — services send here
+      - "4318:4318"   # OTLP HTTP
+      - "8889:8889"   # Prometheus metrics scrape endpoint
+    depends_on:
+      - jaeger
+      - tempo
+
+  # ── Prometheus ───────────────────────────────────────────────────────────────
+  # Scrapes metrics from the OTel Collector and Spring Boot actuator endpoints
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+
+  # ── Grafana ───────────────────────────────────────────────────────────────────
+  # Dashboards — open http://localhost:3000 (admin/admin)
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_USERS_DEFAULT_THEME=dark
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - jaeger
+      - tempo
+
+  # ── Python Services ───────────────────────────────────────────────────────────
+
+  orchestrator:
+    build: ./orchestrator
+    ports:
+      - "8080:8080"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - RESEARCH_AGENT_URL=http://research-agent:8081
+      - WRITER_AGENT_URL=http://writer-agent:8082
+    depends_on:
+      - otel-collector
+      - research-agent
+      - writer-agent
+
+  research-agent:
+    build: ./research-agent
+    ports:
+      - "8081:8081"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    depends_on:
+      - otel-collector
+
+  writer-agent:
+    build: ./writer-agent
+    ports:
+      - "8082:8082"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    depends_on:
+      - otel-collector

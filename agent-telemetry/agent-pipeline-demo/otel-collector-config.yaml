@@ -1,0 +1,61 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+  # Add resource attributes to every span/metric/log
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: demo
+        action: upsert
+
+  # Memory limiter prevents OOM in long-running demos
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 400
+
+exporters:
+  # Traces → Jaeger (native UI at :16686)
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+  # Traces → Grafana Tempo (dark-mode UI via Grafana Explore at :3000)
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+  # Metrics → Prometheus
+  prometheus:
+    endpoint: 0.0.0.0:8889
+
+  debug:
+    verbosity: detailed
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp/jaeger, otlp/tempo, debug]
+
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [prometheus]
+
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [debug]
