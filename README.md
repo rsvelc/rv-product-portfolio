@@ -15,3 +15,9 @@ A product case study on a problem I couldn't stop thinking about: why do e-comme
 A nightly AI planner built for an ADHD brain. Every night it sits you down, asks how your day went, and helps you plan tomorrow — connected to your goals, honest about your limits, and written straight to your Google Calendar. No dumping a list at you and wishing you luck.
 <br> 
 More things are coming. Check back, or don't — Aria will remind me to update this anyway.
+<br>
+<br>
+
+[Agent Telemetry Demo](https://github.com/rsvelc/rv-product-portfolio/tree/main/agent-telemetry/agent-pipeline-demo), <strong> a Multi-Agent Observability Pipeline </strong>
+<br>
+A working demo of what it actually looks like to observe AI agents in production — not just logs, but real distributed tracing across a three-agent pipeline. A Research Agent and a Writer Agent talk to each other via HTTP, both making live Claude API calls, while a third Hallucination Checker catches claims the writer invented that the researcher never found. Every LLM call emits token counts, cost, latency, and the actual prompt and response as span attributes — all stitched into one trace tree across services using OpenTelemetry's GenAI semantic conventions. Built because "add some logging" is not a reliability strategy for agents.
