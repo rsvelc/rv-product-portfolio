@@ -1,4 +1,4 @@
-# Agent Pipeline Demo — OpenTelemetry + Claude LLM
+# Agent Pipeline Demo with OpenTelemetry
 
 Three Python FastAPI microservices wired into a real-world **multi-agent AI workflow**, fully instrumented with OpenTelemetry distributed tracing.
 
