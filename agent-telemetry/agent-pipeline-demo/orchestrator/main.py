@@ -4,6 +4,7 @@ import asyncio
 import json
 import anthropic
 import httpx
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from opentelemetry import trace
@@ -14,12 +15,13 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.trace import StatusCode
-from prometheus_client import Counter, Histogram, Gauge
+from prometheus_client import Counter, Histogram
 from prometheus_fastapi_instrumentator import Instrumentator
+from graph_memory import GraphMemory
 
 # ── Constants ─────────────────────────────────────────────────────────────────
-SERVICE  = "orchestrator"
-MODEL    = "claude-haiku-4-5-20251001"
+SERVICE   = "orchestrator"
+MODEL     = "claude-haiku-4-5-20251001"
 HAIKU_IN  = 0.25  / 1_000_000
 HAIKU_OUT = 1.25  / 1_000_000
 
@@ -31,22 +33,28 @@ provider.add_span_processor(BatchSpanProcessor(
 ))
 trace.set_tracer_provider(provider)
 tracer = trace.get_tracer(SERVICE)
-
-# Auto-instruments httpx — injects traceparent so cross-service spans join one trace
 HTTPXClientInstrumentor().instrument()
 
-# ── Prometheus custom metrics ─────────────────────────────────────────────────
-llm_cost             = Counter("llm_cost_usd_total",           "Cumulative LLM cost USD",              ["service", "agent_role"])
-llm_latency          = Histogram("llm_latency_seconds",        "LLM call duration",                    ["service", "agent_role"],
-                                  buckets=[0.5, 1, 2, 3, 5, 8, 13, 21, 34])
-llm_retries          = Counter("llm_retries_total",            "LLM retry attempts",                   ["service"])
-llm_errors           = Counter("llm_errors_total",             "LLM errors by type",                   ["service", "error_type"])
-hallucination_risk   = Counter("hallucination_risk_total",     "Hallucination risk events by level",    ["service", "risk_level"])
-pipeline_cost_total  = Histogram("pipeline_cost_usd",          "Total cost per pipeline run USD",       ["service"],
-                                  buckets=[0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05])
+# ── Prometheus metrics ────────────────────────────────────────────────────────
+llm_cost           = Counter("llm_cost_usd_total",       "Cumulative LLM cost USD",           ["service", "agent_role"])
+llm_latency        = Histogram("llm_latency_seconds",    "LLM call duration",                 ["service", "agent_role"],
+                                buckets=[0.5, 1, 2, 3, 5, 8, 13, 21, 34])
+llm_retries        = Counter("llm_retries_total",        "LLM retry attempts",                ["service"])
+llm_errors         = Counter("llm_errors_total",         "LLM errors by type",               ["service", "error_type"])
+hallucination_risk = Counter("hallucination_risk_total", "Hallucination risk events by level", ["service", "risk_level"])
 
-# ── App ───────────────────────────────────────────────────────────────────────
-app = FastAPI(title="Orchestrator")
+# ── App lifespan ──────────────────────────────────────────────────────────────
+graph: GraphMemory = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global graph
+    graph = GraphMemory(tracer)
+    await graph.await_ready()
+    yield
+    await graph.close()
+
+app = FastAPI(title="Orchestrator", lifespan=lifespan)
 FastAPIInstrumentor.instrument_app(app)
 Instrumentator().instrument(app).expose(app)
 
@@ -55,11 +63,10 @@ llm = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 RESEARCH_URL = os.getenv("RESEARCH_AGENT_URL", "http://localhost:8081")
 WRITER_URL   = os.getenv("WRITER_AGENT_URL",   "http://localhost:8082")
 
-HALLUCINATION_SYSTEM = """You are a rigorous fact-checker. Analyze whether a generated report makes
-claims that go beyond or contradict the source research findings.
-Respond ONLY with valid JSON — no markdown, no explanation, just the JSON object:
-{"risk_level": "low|medium|high", "confidence_score": 0.0-1.0, "unsupported_claims": ["claim1", "claim2"]}
-risk_level: low = report stays within research, medium = some extrapolation, high = clear fabrications."""
+HALLUCINATION_SYSTEM = """You are a rigorous fact-checker.
+Analyze whether a generated report makes claims not supported by the source research.
+Respond ONLY with valid JSON — no markdown:
+{"risk_level": "low|medium|high", "confidence_score": 0.0-1.0, "unsupported_claims": ["claim1"]}"""
 
 
 class PipelineRequest(BaseModel):
@@ -69,9 +76,10 @@ class PipelineRequest(BaseModel):
 @app.post("/api/pipeline")
 async def pipeline(req: PipelineRequest):
     pipeline_start = time.perf_counter()
+    total_cost = 0.0
 
     with tracer.start_as_current_span("agent.orchestrate") as span:
-        span.set_attribute("agent.name", SERVICE)
+        span.set_attribute("agent.name",    SERVICE)
         span.set_attribute("pipeline.topic", req.topic)
         try:
             async with httpx.AsyncClient(timeout=60) as client:
@@ -93,18 +101,32 @@ async def pipeline(req: PipelineRequest):
                     report = w.json()["report"]
                     s.set_attribute("agent.output_length", len(report))
 
-            # ── Step 3: Hallucination check (inline LLM call) ─────────────────
-            hallucination = await check_hallucination(findings, report)
+            # ── Step 3: Hallucination check ───────────────────────────────────
+            hallucination, h_cost = await check_hallucination(findings, report)
+            total_cost += h_cost
+
+            duration = time.perf_counter() - pipeline_start
 
             span.set_attribute("pipeline.steps_completed",              3)
+            span.set_attribute("pipeline.total_duration_seconds",       round(duration, 3))
             span.set_attribute("hallucination.risk_level",              hallucination["risk_level"])
             span.set_attribute("hallucination.confidence_score",        hallucination["confidence_score"])
             span.set_attribute("hallucination.unsupported_claim_count", len(hallucination["unsupported_claims"]))
 
-            # Track pipeline-level cost (approximated from hallucination check only;
-            # the other agents export their own cost metrics)
-            pipeline_duration = time.perf_counter() - pipeline_start
-            span.set_attribute("pipeline.total_duration_seconds", round(pipeline_duration, 3))
+            hallucination_risk.labels(
+                service=SERVICE,
+                risk_level=hallucination.get("risk_level", "unknown")
+            ).inc()
+
+            # ── Step 4: Persist pipeline run to knowledge graph ───────────────
+            await graph.store_pipeline_run(
+                topic=req.topic,
+                findings=findings,
+                report=report,
+                hallucination=hallucination,
+                total_cost=total_cost,
+                duration=duration,
+            )
 
             return {
                 "topic":             req.topic,
@@ -119,41 +141,39 @@ async def pipeline(req: PipelineRequest):
             raise HTTPException(status_code=500, detail=str(e))
 
 
-async def check_hallucination(research: str, report: str) -> dict:
+@app.get("/api/memory")
+async def memory():
     """
-    Sends research + report to Claude acting as a fact-checker.
-    Returns risk_level, confidence_score, and a list of unsupported claims.
-    Emits hallucination_risk Prometheus counter.
+    Return the full knowledge graph state — all topics, entities,
+    relationships, and recent pipeline runs stored in Neo4j.
     """
+    return await graph.get_knowledge_graph()
+
+
+async def check_hallucination(research: str, report: str) -> tuple[dict, float]:
     with tracer.start_as_current_span("agent.hallucination_check") as span:
-        span.set_attribute("agent.role", "fact-checker")
+        span.set_attribute("agent.role",                    "fact-checker")
         span.set_attribute("hallucination.research_length", len(research))
         span.set_attribute("hallucination.report_length",   len(report))
 
         prompt = f"Research findings:\n{research}\n\nGenerated report:\n{report}"
-        result_text = await call_claude("fact-checker", HALLUCINATION_SYSTEM, prompt)
+        result_text, cost = await call_claude("fact-checker", HALLUCINATION_SYSTEM, prompt)
 
         try:
-            # Strip any accidental markdown fences before parsing
             clean = result_text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
             result = json.loads(clean)
         except json.JSONDecodeError:
-            # Degrade gracefully — don't fail the whole pipeline
             result = {"risk_level": "unknown", "confidence_score": 0.0, "unsupported_claims": []}
 
         span.set_attribute("hallucination.risk_level",     result.get("risk_level", "unknown"))
         span.set_attribute("hallucination.confidence",     result.get("confidence_score", 0.0))
         span.set_attribute("hallucination.flagged_claims", str(result.get("unsupported_claims", [])))
 
-        hallucination_risk.labels(
-            service=SERVICE,
-            risk_level=result.get("risk_level", "unknown")
-        ).inc()
-
-        return result
+        return result, cost
 
 
-async def call_claude(agent_role: str, system: str, user_message: str, max_retries: int = 3) -> str:
+async def call_claude(agent_role: str, system: str, user_message: str, max_retries: int = 3) -> tuple[str, float]:
+    """Returns (text, cost_usd)"""
     with tracer.start_as_current_span("gen_ai chat") as span:
         span.set_attribute("gen_ai.system",             "anthropic")
         span.set_attribute("gen_ai.operation.name",     "chat")
@@ -178,25 +198,23 @@ async def call_claude(agent_role: str, system: str, user_message: str, max_retri
                     messages=[{"role": "user", "content": user_message}],
                 )
                 duration = time.perf_counter() - t0
-
                 input_tok  = response.usage.input_tokens
                 output_tok = response.usage.output_tokens
                 cost       = (input_tok * HAIKU_IN) + (output_tok * HAIKU_OUT)
                 text       = response.content[0].text
 
-                span.set_attribute("gen_ai.usage.input_tokens",       input_tok)
-                span.set_attribute("gen_ai.usage.output_tokens",      output_tok)
-                span.set_attribute("gen_ai.response.finish_reasons",  [response.stop_reason])
-                span.set_attribute("gen_ai.response.model",           response.model)
-                span.set_attribute("llm.cost_usd",                    round(cost, 6))
-                span.set_attribute("llm.latency_seconds",             round(duration, 3))
-                span.set_attribute("llm.retry_count",                 attempt)
-                span.set_attribute("gen_ai.completion",               text[:1000])
+                span.set_attribute("gen_ai.usage.input_tokens",      input_tok)
+                span.set_attribute("gen_ai.usage.output_tokens",     output_tok)
+                span.set_attribute("gen_ai.response.finish_reasons", [response.stop_reason])
+                span.set_attribute("gen_ai.response.model",          response.model)
+                span.set_attribute("llm.cost_usd",                   round(cost, 6))
+                span.set_attribute("llm.latency_seconds",            round(duration, 3))
+                span.set_attribute("llm.retry_count",                attempt)
+                span.set_attribute("gen_ai.completion",              text[:1000])
 
                 llm_cost.labels(service=SERVICE, agent_role=agent_role).inc(cost)
                 llm_latency.labels(service=SERVICE, agent_role=agent_role).observe(duration)
-
-                return text
+                return text, cost
 
             except anthropic.RateLimitError as e:
                 last_exc = e
@@ -205,13 +223,11 @@ async def call_claude(agent_role: str, system: str, user_message: str, max_retri
                     span.record_exception(e)
                     span.set_status(StatusCode.ERROR, "rate limit exceeded after retries")
                     raise
-
             except Exception as e:
                 llm_errors.labels(service=SERVICE, error_type=type(e).__name__).inc()
                 span.record_exception(e)
                 span.set_status(StatusCode.ERROR, str(e))
                 raise
-
         raise last_exc
 
 

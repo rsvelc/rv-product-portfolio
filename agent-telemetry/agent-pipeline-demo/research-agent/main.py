@@ -3,7 +3,6 @@ import time
 import asyncio
 import json
 import anthropic
-import chromadb
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -16,12 +15,13 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.trace import StatusCode
 from prometheus_client import Counter, Histogram
 from prometheus_fastapi_instrumentator import Instrumentator
+from graph_memory import GraphMemory
 
 # ── Constants ─────────────────────────────────────────────────────────────────
-SERVICE  = "research-agent"
-MODEL    = "claude-haiku-4-5-20251001"
-HAIKU_IN  = 0.25  / 1_000_000   # $ per input token
-HAIKU_OUT = 1.25  / 1_000_000   # $ per output token
+SERVICE   = "research-agent"
+MODEL     = "claude-haiku-4-5-20251001"
+HAIKU_IN  = 0.25  / 1_000_000
+HAIKU_OUT = 1.25  / 1_000_000
 
 # ── OTel setup ────────────────────────────────────────────────────────────────
 resource = Resource.create({SERVICE_NAME: SERVICE})
@@ -32,60 +32,39 @@ provider.add_span_processor(BatchSpanProcessor(
 trace.set_tracer_provider(provider)
 tracer = trace.get_tracer(SERVICE)
 
-# ── Prometheus custom metrics ─────────────────────────────────────────────────
-llm_cost    = Counter("llm_cost_usd_total",      "Cumulative LLM cost USD",          ["service", "agent_role"])
-llm_latency = Histogram("llm_latency_seconds",   "LLM call duration",                ["service", "agent_role"],
+# ── Prometheus metrics ────────────────────────────────────────────────────────
+llm_cost    = Counter("llm_cost_usd_total",       "Cumulative LLM cost USD",        ["service", "agent_role"])
+llm_latency = Histogram("llm_latency_seconds",    "LLM call duration",              ["service", "agent_role"],
                          buckets=[0.5, 1, 2, 3, 5, 8, 13, 21, 34])
-llm_retries = Counter("llm_retries_total",       "LLM retry attempts",               ["service"])
-llm_errors  = Counter("llm_errors_total",        "LLM errors by type",               ["service", "error_type"])
-rag_chunks  = Histogram("rag_chunks_retrieved",  "Chunks retrieved per query",       ["service"], buckets=[1,2,3,4,5,10])
-rag_score   = Histogram("rag_relevance_score",   "Top chunk relevance (0-1)",        ["service"],
-                         buckets=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+llm_retries = Counter("llm_retries_total",        "LLM retry attempts",             ["service"])
+llm_errors  = Counter("llm_errors_total",         "LLM errors by type",             ["service", "error_type"])
+graph_hits  = Counter("graph_cache_hits_total",   "Prior research cache hits",      ["service"])
+graph_enrichments = Counter("graph_enrichments_total", "Runs enriched by related topics", ["service"])
 
-# ── Knowledge base docs (seeded into ChromaDB on startup) ─────────────────────
-KNOWLEDGE_BASE = [
-    {"id": "ai_agents",      "text": "AI agents are autonomous systems combining LLMs with tools, memory, and planning. They execute multi-step tasks, call APIs, browse the web, write code, and maintain context across complex workflows. Key patterns include ReAct (Reason+Act), Plan-and-Execute, and multi-agent collaboration."},
-    {"id": "ai_healthcare",  "text": "AI in healthcare is transforming diagnostics, drug discovery, and patient care. FDA-approved AI tools now detect diabetic retinopathy and lung cancer in imaging. LLMs assist clinical documentation, reducing physician burnout by 30-40%. Challenges include data privacy, algorithmic bias, and regulatory approval timelines."},
-    {"id": "llm_trends",     "text": "Large Language Models (LLMs) in 2024-2025: GPT-4o, Claude 3.5, and Gemini 1.5 achieved near-human reasoning. Context windows expanded to 1M+ tokens. Open-source models (Llama 3, Mistral) now rival closed models. Inference costs dropped 90% since 2023. Key trends: multimodality, tool use, and long-context reasoning."},
-    {"id": "climate_tech",   "text": "Climate technology investments reached $1.8T globally in 2024. Solar power became the cheapest electricity source in history at $0.02/kWh. Battery storage capacity quadrupled. Carbon capture costs fell to $300/ton. AI is used to optimize energy grids, predict weather, and accelerate materials science for clean energy."},
-    {"id": "software_eng",   "text": "AI-assisted software engineering: GitHub Copilot adopted by 1M+ developers, boosting productivity 55%. AI agents now autonomously fix bugs, write tests, and review PRs. Key challenges: code correctness, security vulnerabilities in AI-generated code, and over-reliance. Best practice: AI augments, human reviews."},
-    {"id": "quantum_comp",   "text": "Quantum computing milestones: Google achieved 1M physical qubits in 2024. IBM's error correction reached practical thresholds. Near-term applications: drug simulation, logistics optimization, cryptography. Full fault-tolerant quantum computing still 10-15 years away. Post-quantum cryptography is now a critical enterprise priority."},
-    {"id": "fintech_ai",     "text": "AI in finance: fraud detection accuracy improved to 99.9%, saving $40B annually. Algorithmic trading accounts for 70% of US equity volume. LLMs now draft earnings reports and analyst summaries. Regulatory focus intensifies on explainability and model risk management. Embedded finance reaches $7T market by 2030."},
-    {"id": "space_tech",     "text": "Space technology: SpaceX Starship achieved full orbital flight in 2024. Satellite internet (Starlink, OneWeb) connected 5M users globally. Lunar missions resumed with NASA Artemis. Commercial space market valued at $600B by 2030. AI used for autonomous navigation, debris tracking, and telescope data analysis."},
-    {"id": "cybersecurity",  "text": "Cybersecurity in 2024-2025: AI-powered attacks increased 300%, including deepfake social engineering and automated vulnerability discovery. Zero-trust architecture adoption reached 60% of enterprises. Average data breach cost hit $4.9M. Agentic AI for autonomous threat hunting is the emerging frontier."},
-    {"id": "robotics",       "text": "Robotics advances: humanoid robots (Figure 01, Boston Dynamics Atlas) entered manufacturing pilots. Boston Dynamics deployed 1,000+ Spot robots in industrial inspection. Surgical robots achieved sub-millimeter precision. Warehouse automation reduced picking costs by 70%. Key bottleneck: dexterous manipulation and real-world generalization."},
-]
-
-# ── ChromaDB (embedded, no separate service needed) ───────────────────────────
-chroma = chromadb.Client()
-kb_collection = None
-
+# ── App lifespan ──────────────────────────────────────────────────────────────
+graph: GraphMemory = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global kb_collection
-    kb_collection = chroma.get_or_create_collection("knowledge_base")
-    if kb_collection.count() == 0:
-        kb_collection.add(
-            documents=[d["text"] for d in KNOWLEDGE_BASE],
-            ids=[d["id"] for d in KNOWLEDGE_BASE],
-        )
-        print(f"[research-agent] Seeded {len(KNOWLEDGE_BASE)} documents into ChromaDB")
+    global graph
+    graph = GraphMemory(tracer)
+    await graph.await_ready()
+    await graph.create_indexes()
     yield
+    await graph.close()
 
-
-# ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(title="Research Agent", lifespan=lifespan)
 FastAPIInstrumentor.instrument_app(app)
 Instrumentator().instrument(app).expose(app)
 
 llm = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-SYSTEM_PROMPT = """You are a senior research analyst. Using the provided context, produce a concise research brief with:
-- 3-5 key facts or trends (grounded in the context)
+SYSTEM_PROMPT = """You are a senior research analyst. Produce a concise research brief with:
+- 3-5 key facts or trends
 - Current state of the field
 - Notable recent developments
-Keep it under 300 words. Be specific and data-driven. Only assert what is supported by the context."""
+Keep it under 300 words. Be specific and data-driven.
+If prior research context is provided, build on it — reference what's already known and focus on new angles."""
 
 
 class ResearchRequest(BaseModel):
@@ -99,17 +78,34 @@ async def research(req: ResearchRequest):
         span.set_attribute("agent.role", "researcher")
         span.set_attribute("research.topic", req.topic)
         try:
-            # Step 1 — RAG: retrieve relevant context from knowledge base
-            context, rag_meta = retrieve_context(req.topic)
-            span.set_attribute("rag.chunks_retrieved", rag_meta["chunks"])
-            span.set_attribute("rag.top_relevance_score", rag_meta["top_score"])
-            span.set_attribute("rag.context_length", len(context))
+            # ── Step 1: Check graph for prior research on this exact topic ────
+            prior = await graph.get_prior_research(req.topic)
+            if prior:
+                graph_hits.labels(service=SERVICE).inc()
+                span.set_attribute("graph.prior_research_found", True)
+            else:
+                span.set_attribute("graph.prior_research_found", False)
 
-            # Step 2 — LLM: research with retrieved context grounding the answer
-            prompt = f"Topic: {req.topic}\n\nRelevant context:\n{context}\n\nProvide your research brief."
+            # ── Step 2: Find related topics via shared entities ───────────────
+            related = await graph.find_related_context(req.topic)
+            if related:
+                graph_enrichments.labels(service=SERVICE).inc()
+            span.set_attribute("graph.related_topics_found", len(related))
+
+            # ── Step 3: Build enriched prompt with graph context ──────────────
+            prompt = build_prompt(req.topic, prior, related)
+            span.set_attribute("research.prompt_has_prior", prior is not None)
+            span.set_attribute("research.prompt_has_related", len(related) > 0)
+
+            # ── Step 4: LLM call with full graph context ──────────────────────
             findings = await call_claude("researcher", SYSTEM_PROMPT, prompt)
-
             span.set_attribute("research.findings_length", len(findings))
+
+            # ── Step 5: Extract POLE+O entities and store in graph ────────────
+            entities = await extract_entities(findings)
+            span.set_attribute("graph.entities_extracted", len(entities))
+            await graph.store_research(req.topic, findings, entities)
+
             return {"topic": req.topic, "findings": findings}
 
         except Exception as e:
@@ -118,46 +114,54 @@ async def research(req: ResearchRequest):
             raise HTTPException(status_code=500, detail=str(e))
 
 
-def retrieve_context(topic: str, n_results: int = 3) -> tuple[str, dict]:
-    """Query ChromaDB and return retrieved text + RAG evaluation metrics."""
-    with tracer.start_as_current_span("rag.retrieve") as span:
-        span.set_attribute("rag.query", topic)
-        span.set_attribute("rag.n_results", n_results)
+def build_prompt(topic: str, prior: str | None, related: list[dict]) -> str:
+    parts = [f"Research this topic: {topic}"]
+    if prior:
+        parts.append(f"\n\n--- Prior research on this exact topic ---\n{prior}\n\nBuild on the above — focus on new angles or deeper analysis.")
+    if related:
+        parts.append("\n\n--- Related topics already in our knowledge graph ---")
+        for r in related:
+            parts.append(f"\n[{r['related_topic']}] (shares {r['shared_entities']} entities):\n{r['findings'][:300]}...")
+        parts.append("\n\nConsider how this topic connects to or differs from the above.")
+    return "\n".join(parts)
 
-        results = kb_collection.query(query_texts=[topic], n_results=n_results)
-        docs      = results["documents"][0]
-        distances = results["distances"][0]  # lower = more similar (L2 distance)
 
-        # Convert L2 distance to a 0-1 relevance score
-        top_score = max(0.0, 1.0 - (min(distances) / 2.0))
-
-        # Emit Prometheus metrics
-        rag_chunks.labels(service=SERVICE).observe(len(docs))
-        rag_score.labels(service=SERVICE).observe(top_score)
-
-        span.set_attribute("rag.top_score", round(top_score, 4))
-        span.set_attribute("rag.chunks_returned", len(docs))
-
-        context = "\n\n---\n\n".join(docs)
-        return context, {"chunks": len(docs), "top_score": round(top_score, 4)}
+async def extract_entities(findings: str) -> list[dict]:
+    """
+    Use Claude to extract POLE+O entities (Person, Organization, Location, Event, Object)
+    from findings. These become nodes in the knowledge graph.
+    """
+    with tracer.start_as_current_span("agent.extract_entities") as span:
+        span.set_attribute("agent.role", "entity-extractor")
+        try:
+            response = await llm.messages.create(
+                model=MODEL,
+                max_tokens=512,
+                system=(
+                    "Extract named entities from text. "
+                    "Return ONLY a valid JSON array, no markdown, no explanation:\n"
+                    '[{"name": "...", "type": "Person|Organization|Location|Event|Object"}]\n'
+                    "Maximum 10 entities. Only include clearly named, specific entities."
+                ),
+                messages=[{"role": "user", "content": f"Extract entities:\n{findings}"}],
+            )
+            text = response.content[0].text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+            entities = json.loads(text)
+            span.set_attribute("graph.entity_count", len(entities))
+            return entities
+        except Exception as e:
+            span.record_exception(e)
+            return []  # Degrade gracefully — entity extraction is non-critical
 
 
 async def call_claude(agent_role: str, system: str, user_message: str, max_retries: int = 3) -> str:
-    """
-    Anthropic API wrapper with:
-    - Prompt + completion tracing
-    - Token / cost tracking
-    - LLM latency histogram
-    - Exponential backoff retry
-    """
     with tracer.start_as_current_span("gen_ai chat") as span:
-        span.set_attribute("gen_ai.system",            "anthropic")
-        span.set_attribute("gen_ai.operation.name",    "chat")
-        span.set_attribute("gen_ai.request.model",     MODEL)
+        span.set_attribute("gen_ai.system",             "anthropic")
+        span.set_attribute("gen_ai.operation.name",     "chat")
+        span.set_attribute("gen_ai.request.model",      MODEL)
         span.set_attribute("gen_ai.request.max_tokens", 1024)
-        span.set_attribute("agent.role",               agent_role)
-        # Prompt tracing — truncated to keep span storage reasonable
-        span.set_attribute("gen_ai.prompt", user_message[:1000])
+        span.set_attribute("agent.role",                agent_role)
+        span.set_attribute("gen_ai.prompt",             user_message[:1000])
 
         last_exc = None
         for attempt in range(max_retries):
@@ -175,26 +179,22 @@ async def call_claude(agent_role: str, system: str, user_message: str, max_retri
                     messages=[{"role": "user", "content": user_message}],
                 )
                 duration = time.perf_counter() - t0
-
                 input_tok  = response.usage.input_tokens
                 output_tok = response.usage.output_tokens
                 cost       = (input_tok * HAIKU_IN) + (output_tok * HAIKU_OUT)
                 text       = response.content[0].text
 
-                # Span attributes
-                span.set_attribute("gen_ai.usage.input_tokens",        input_tok)
-                span.set_attribute("gen_ai.usage.output_tokens",       output_tok)
-                span.set_attribute("gen_ai.response.finish_reasons",   [response.stop_reason])
-                span.set_attribute("gen_ai.response.model",            response.model)
-                span.set_attribute("llm.cost_usd",                     round(cost, 6))
-                span.set_attribute("llm.latency_seconds",              round(duration, 3))
-                span.set_attribute("llm.retry_count",                  attempt)
-                span.set_attribute("gen_ai.completion",                text[:1000])
+                span.set_attribute("gen_ai.usage.input_tokens",      input_tok)
+                span.set_attribute("gen_ai.usage.output_tokens",     output_tok)
+                span.set_attribute("gen_ai.response.finish_reasons", [response.stop_reason])
+                span.set_attribute("gen_ai.response.model",          response.model)
+                span.set_attribute("llm.cost_usd",                   round(cost, 6))
+                span.set_attribute("llm.latency_seconds",            round(duration, 3))
+                span.set_attribute("llm.retry_count",                attempt)
+                span.set_attribute("gen_ai.completion",              text[:1000])
 
-                # Prometheus metrics
                 llm_cost.labels(service=SERVICE, agent_role=agent_role).inc(cost)
                 llm_latency.labels(service=SERVICE, agent_role=agent_role).observe(duration)
-
                 return text
 
             except anthropic.RateLimitError as e:
@@ -204,14 +204,12 @@ async def call_claude(agent_role: str, system: str, user_message: str, max_retri
                     span.record_exception(e)
                     span.set_status(StatusCode.ERROR, "rate limit exceeded after retries")
                     raise
-
             except Exception as e:
                 llm_errors.labels(service=SERVICE, error_type=type(e).__name__).inc()
                 span.record_exception(e)
                 span.set_status(StatusCode.ERROR, str(e))
                 raise
-
-        raise last_exc  # should not reach here
+        raise last_exc
 
 
 @app.get("/health")
