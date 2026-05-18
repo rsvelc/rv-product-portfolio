@@ -9,24 +9,8 @@ services:
     ports:
       - "16686:16686"  # Jaeger UI
 
-  # ── Grafana Tempo ─────────────────────────────────────────────────────────────
-  # Trace backend for Grafana dark-mode Explore — open http://localhost:3000
-  tempo:
-    image: grafana/tempo:latest
-    command: ["-config.file=/etc/tempo.yaml"]
-    volumes:
-      - ./tempo-config.yaml:/etc/tempo.yaml
-    ports:
-      - "3200:3200"   # Tempo HTTP API
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3200/ready"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 10s
-
   # ── OTel Collector ──────────────────────────────────────────────────────────
-  # Fans out traces to BOTH Jaeger and Tempo
+  # Receives traces from all agents and forwards to Jaeger
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     command: ["--config=/etc/otel-collector-config.yaml"]
@@ -37,10 +21,7 @@ services:
       - "4318:4318"   # OTLP HTTP
       - "8889:8889"   # Prometheus metrics scrape endpoint
     depends_on:
-      jaeger:
-        condition: service_started
-      tempo:
-        condition: service_healthy
+      - jaeger
 
   # ── Prometheus ───────────────────────────────────────────────────────────────
   # Scrapes metrics from the OTel Collector and Spring Boot actuator endpoints
@@ -70,7 +51,6 @@ services:
     depends_on:
       - prometheus
       - jaeger
-      - tempo
 
   # ── Neo4j ────────────────────────────────────────────────────────────────────
   # Knowledge graph — browser UI at http://localhost:7474 (neo4j/password)
