@@ -18,6 +18,12 @@ services:
       - ./tempo-config.yaml:/etc/tempo.yaml
     ports:
       - "3200:3200"   # Tempo HTTP API
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3200/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   # ── OTel Collector ──────────────────────────────────────────────────────────
   # Fans out traces to BOTH Jaeger and Tempo
@@ -31,8 +37,10 @@ services:
       - "4318:4318"   # OTLP HTTP
       - "8889:8889"   # Prometheus metrics scrape endpoint
     depends_on:
-      - jaeger
-      - tempo
+      jaeger:
+        condition: service_started
+      tempo:
+        condition: service_healthy
 
   # ── Prometheus ───────────────────────────────────────────────────────────────
   # Scrapes metrics from the OTel Collector and Spring Boot actuator endpoints
@@ -74,6 +82,12 @@ services:
     ports:
       - "7474:7474"   # Neo4j Browser (dark mode built in)
       - "7687:7687"   # Bolt protocol
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:7474"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   # ── Python Services ───────────────────────────────────────────────────────────
 
@@ -90,10 +104,14 @@ services:
       - NEO4J_USER=neo4j
       - NEO4J_PASSWORD=password
     depends_on:
-      - otel-collector
-      - neo4j
-      - research-agent
-      - writer-agent
+      otel-collector:
+        condition: service_started
+      neo4j:
+        condition: service_healthy
+      research-agent:
+        condition: service_started
+      writer-agent:
+        condition: service_started
 
   research-agent:
     build: ./research-agent
@@ -106,8 +124,10 @@ services:
       - NEO4J_USER=neo4j
       - NEO4J_PASSWORD=password
     depends_on:
-      - otel-collector
-      - neo4j
+      otel-collector:
+        condition: service_started
+      neo4j:
+        condition: service_healthy
 
   writer-agent:
     build: ./writer-agent
@@ -117,4 +137,5 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     depends_on:
-      - otel-collector
+      otel-collector:
+        condition: service_started
