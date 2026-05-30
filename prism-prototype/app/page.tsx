@@ -1133,7 +1133,7 @@ export default function PRISMJourney() {
 
         {/* Confidence/Emotion Indicator - Top of Journey */}
         <div className="mb-6">
-          <p className="text-sm text-muted-foreground text-center mb-3">How {scenario.name} is feeling right now</p>
+          <p className="text-base font-semibold text-foreground text-center mb-3">How {scenario.name} is feeling right now</p>
           <EmotionIndicator
             emotion={step.emotion}
             confidence={step.confidence}
