@@ -863,13 +863,22 @@ export default function PRISMJourney() {
           </div>
           <div className="flex items-center gap-3">
             <a 
+              href="https://github.com/rsvelc/rv-product-portfolio/raw/8d82f8a059e8b72757e012c7a5f718c2e8713269/prism/PRISM-rsvelc-casestudy.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm font-medium bg-primary text-primary-foreground px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Download Case Study</span>
+              <span className="sm:hidden">PDF</span>
+            </a>
+            <a 
               href="https://www.linkedin.com/in/ramya-velchuri/" 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <Linkedin className="h-4 w-4" />
-              <span className="hidden sm:inline">Ramya Velchuri</span>
             </a>
             <a 
               href="https://github.com/rsvelc/rv-product-portfolio"
@@ -1025,36 +1034,15 @@ export default function PRISMJourney() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty"
+            className="text-muted-foreground max-w-3xl mx-auto text-pretty"
           >
-            See how PRISM adapts its intervention strategy based on behavioral signals across three different buyer scenarios.
+            Matt, Sarah, and Jenna are three different buyers with different buying patterns. To see how PRISM personalizes their post-purchase journey, select each buyer and click on Auto Play (or manually navigate each intervention step with notes using the arrows) to see how their purchase confidence changes with each intervention.
           </motion.p>
         </div>
       </section>
 
       {/* Scenario Selector */}
       <section className="max-w-5xl mx-auto px-4 mb-8">
-        {/* Autoplay Button at Top */}
-        <div className="flex flex-col items-center mb-6">
-          <p className="text-sm text-muted-foreground mb-3 text-center">Click Autoplay to see the journey through the eyes of each buyer</p>
-          <Button
-            onClick={() => setIsPlaying(!isPlaying)}
-            className="rounded-full px-6"
-          >
-            {isPlaying ? (
-              <>
-                <Pause className="h-4 w-4 mr-2" />
-                Pause
-              </>
-            ) : (
-              <>
-                <Play className="h-4 w-4 mr-2" />
-                Auto Play
-              </>
-            )}
-          </Button>
-        </div>
-        
         <div className="grid sm:grid-cols-3 gap-4">
           {(Object.keys(scenarios) as Scenario[]).map((key) => {
             const s = scenarios[key]
@@ -1143,6 +1131,65 @@ export default function PRISMJourney() {
           </div>
         </div>
 
+        {/* Confidence/Emotion Indicator - Top of Journey */}
+        <div className="mb-6">
+          <p className="text-base font-semibold text-foreground text-center mb-3">How {scenario.name} is feeling right now</p>
+          <EmotionIndicator
+            emotion={step.emotion}
+            confidence={step.confidence}
+            label={step.emotion === "doubt" ? "Doubt Level" : step.emotion === "confident" ? "Confidence" : step.emotion === "neutral" ? "Neutral" : "Excitement"}
+          />
+        </div>
+
+        {/* Playback Controls */}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleReset}
+            className="rounded-full"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handlePrev}
+            disabled={currentStep === 0}
+            className="rounded-full"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => setIsPlaying(!isPlaying)}
+            className="rounded-full px-6"
+          >
+            {isPlaying ? (
+              <>
+                <Pause className="h-4 w-4 mr-2" />
+                Pause
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 mr-2" />
+                Auto Play
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleNext}
+            disabled={currentStep === journeySteps.length - 1}
+            className="rounded-full"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">
+            Step {currentStep + 1} of {journeySteps.length}
+          </span>
+        </div>
+
         {/* Journey Content */}
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Left Column - Buyer Profile */}
@@ -1152,11 +1199,6 @@ export default function PRISMJourney() {
               age={scenario.age}
               signals={scenario.signals}
               probability={scenario.probability}
-            />
-            <EmotionIndicator
-              emotion={step.emotion}
-              confidence={step.confidence}
-              label={step.emotion === "doubt" ? "Doubt Level" : step.emotion === "confident" ? "Confidence" : step.emotion === "neutral" ? "Neutral" : "Excitement"}
             />
             
             {/* Intervention Summary Card */}
@@ -1220,36 +1262,6 @@ export default function PRISMJourney() {
               />
             )}
           </div>
-        </div>
-
-        {/* Controls */}
-        <div className="mt-12 flex items-center justify-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleReset}
-            className="rounded-full"
-          >
-            <RotateCcw className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handlePrev}
-            disabled={currentStep === 0}
-            className="rounded-full"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleNext}
-            disabled={currentStep === journeySteps.length - 1}
-            className="rounded-full"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
         </div>
 
         {/* 6 Channels Explanation */}
@@ -1398,20 +1410,6 @@ export default function PRISMJourney() {
               )
             })}
           </div>
-        </div>
-
-        {/* About PRISM */}
-        <div className="mt-16 p-8 rounded-xl border border-border bg-card">
-          <h3 className="text-xl font-semibold text-foreground mb-4">About This Case Study</h3>
-          <p className="text-muted-foreground leading-relaxed mb-4">
-            PRISM (Post-Purchase Remorse Intervention and Signal Model) is a conceptual AI-driven system designed to identify and address buyer&apos;s remorse before it results in a return. By analyzing behavioral signals and delivering personalized interventions, PRISM helps buyers feel confident in their purchase decisions.
-          </p>
-          <p className="text-muted-foreground leading-relaxed mb-4">
-            The system adapts its intervention intensity based on the buyer&apos;s risk profile. High-probability impulse buyers like Matt receive all 6 interventions across 3 windows, moderate-risk buyers like Sarah receive 4 interventions (3 passive + 1 active), while lower-risk buyers like Jenna receive only 2 light passive touchpoints - avoiding over-communication while still providing support.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            This interactive prototype demonstrates the buyer&apos;s journey and intervention points described in the full case study by Ramya Velchuri.
-          </p>
         </div>
       </main>
 
