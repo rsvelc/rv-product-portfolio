@@ -1036,61 +1036,13 @@ export default function PRISMJourney() {
             transition={{ delay: 0.2 }}
             className="text-muted-foreground max-w-3xl mx-auto text-pretty"
           >
-            Matt, Sarah, and Jenna are three different buyers with different buying patterns. To see how PRISM personalizes their post-purchase journey, select each buyer and click on Auto Play (or manually navigate with the arrows) to see how their purchase confidence changes with each intervention.
+            Matt, Sarah, and Jenna are three different buyers with different buying patterns. To see how PRISM personalizes their post-purchase journey, select each buyer and click on Auto Play (or manually navigate each intervention step with notes using the arrows) to see how their purchase confidence changes with each intervention.
           </motion.p>
         </div>
       </section>
 
       {/* Scenario Selector */}
       <section className="max-w-5xl mx-auto px-4 mb-8">
-        {/* Autoplay and Controls */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleReset}
-              className="rounded-full"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handlePrev}
-              disabled={currentStep === 0}
-              className="rounded-full"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className="rounded-full px-6"
-            >
-              {isPlaying ? (
-                <>
-                  <Pause className="h-4 w-4 mr-2" />
-                  Pause
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-2" />
-                  Auto Play
-                </>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleNext}
-              disabled={currentStep === journeySteps.length - 1}
-              className="rounded-full"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        
         <div className="grid sm:grid-cols-3 gap-4">
           {(Object.keys(scenarios) as Scenario[]).map((key) => {
             const s = scenarios[key]
@@ -1411,8 +1363,59 @@ export default function PRISMJourney() {
         </div>
       </main>
 
+      {/* Sticky Bottom Navigation Controls */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border py-3 px-4 z-50">
+        <div className="max-w-5xl mx-auto flex items-center justify-center gap-3">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleReset}
+            className="rounded-full"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handlePrev}
+            disabled={currentStep === 0}
+            className="rounded-full"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => setIsPlaying(!isPlaying)}
+            className="rounded-full px-6"
+          >
+            {isPlaying ? (
+              <>
+                <Pause className="h-4 w-4 mr-2" />
+                Pause
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 mr-2" />
+                Auto Play
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleNext}
+            disabled={currentStep === journeySteps.length - 1}
+            className="rounded-full"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">
+            Step {currentStep + 1} of {journeySteps.length}
+          </span>
+        </div>
+      </div>
+
       {/* Footer */}
-      <footer className="border-t border-border py-8 px-4">
+      <footer className="border-t border-border py-8 px-4 pb-20">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
             Case Study by Ramya Velchuri - Kellogg School of Management, Northwestern University (Class of 2026)
