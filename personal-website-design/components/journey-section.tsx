@@ -64,7 +64,7 @@ const milestones = [
   {
     period: "Early 2000s",
     location: "Pune, IN",
-    description: "Watching shapes dance on a black console, written in C++ by my uncle. Since 6 years old, it felt like nothing less than magic. That magic never left.",
+    description: "Watching shapes dance on a black console, written in C++ by my uncle. At 6 years old, it felt like nothing less than magic. That curiosity never left.",
     position: "top" as const,
     tilt: "left" as const,
     image: "/childhood_picture.png",
@@ -73,7 +73,7 @@ const milestones = [
   {
     period: "CSE Undergrad",
     location: "Hyderabad, IN",
-    description: "For someone introduced to code before she could spell it, CSE was my natural next step.",
+    description: "For someone who was introduced to code before she could spell it, studying Computer Science felt like the natural next step.",
     position: "bottom" as const,
     tilt: "right" as const,
     image: "/undergrad.png",
@@ -82,7 +82,7 @@ const milestones = [
   {
     period: "J.P. Morgan Chase & Co.",
     location: "Hyderabad, IN",
-    description: "Cracked one of the hardest interviews to work in Consumer Banking, high-stakes space where a single product decision could affect millions of people's financial lives.",
+    description: "Consumer banking taught me what it means to build in high-stakes environments, where a single product decision can affect millions of people's financial lives.",
     position: "top" as const,
     tilt: "left" as const,
     image: "/jpmorgan_chase.png",
@@ -91,7 +91,7 @@ const milestones = [
   {
     period: "CodeForGood",
     location: "2021",
-    description: "What started as a small side project to digitize a non-profit's operations ended up helping locate ten malnourished children who had been out of reach. Technology wasn't the solution — it was the bridge to one.",
+    description: "What started as a small side project to digitize a non-profit's operations ended up helping locate ten malnourished children who had been out of reach. It was the moment I realized technology isn't the solution itself - it's an enabler of one.",
     position: "bottom" as const,
     tilt: "right" as const,
     image: "/codeforgood.png",
@@ -100,7 +100,7 @@ const milestones = [
   {
     period: "Kellogg School of Management",
     location: "Evanston, IL",
-    description: "5 years in banking taught me how to build for scale. Kellogg was about learning to build for everyone else — different industries, different customers, different problems entirely.",
+    description: "With that realisation, I came to Kellogg. 5 years in banking taught me how to build for scale. Kellogg taught me how different industries solve problems, how customer needs vary across contexts, and what it means to operate in a truly global market.",
     position: "top" as const,
     tilt: "left" as const,
     image: "/northwestern_kellogg.jpeg",
@@ -109,7 +109,7 @@ const milestones = [
   {
     period: "Amazon",
     location: "Seattle, WA",
-    description: "#customerobsessed. One of the best places to stress-test how technical depth and business thinking can work as one. Shaped how I think about building at scale.",
+    description: "One of the best places to see technical depth and business thinking operate as one. It reshaped how I think about customers, scale, and execution. #CustomerObsessed",
     position: "bottom" as const,
     tilt: "right" as const,
     image: "/amazon_intern.jpg",
@@ -254,10 +254,11 @@ export function JourneySection() {
               What&apos;s next
             </h3>
             <p className="text-muted-foreground leading-relaxed">
-              I wasn&apos;t born during the internet revolution, but I feel lucky to be watching AI 
-              fundamentally change how we build. For the first time, the barrier between an idea 
-              and its execution is almost nothing — which means the real work is finally just 
-              thinking clearly about the right problems.
+              I wasn&apos;t born during the Internet revolution, but I feel lucky to witness the AI
+              revolution in this lifetime. The 6-year-old who fell in love with technology would
+              never have believed that ideas could move this fast. For the first time, the barrier
+              between an idea and its execution is almost nothing. The real work is thinking clearly
+              about the problems worth solving.
             </p>
           </div>
         </div>

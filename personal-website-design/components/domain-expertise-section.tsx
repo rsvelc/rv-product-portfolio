@@ -47,10 +47,10 @@ const domainCards: DomainCard[] = [
 ]
 
 const lookingForwardQuestions = [
-  "Why are agentic workflows needed? What are the costs and implications?",
-  "Are evals enough?",
-  "Do the same rules apply for agentic workflows in highly compliant systems?",
-  "What is the futuristic state of decision observability?",
+  "At what point does an agent become worth the added complexity?",
+  "Are evals enough, or are we missing something?",
+  "What breaks first when you put agents into highly regulated environments?",
+  "If traditional observability helps us understand execution, what helps us understand reasoning (decision observability)?",
 ]
 
 function DomainCardComponent({ card }: { card: DomainCard }) {
