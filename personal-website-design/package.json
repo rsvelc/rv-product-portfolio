@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "pages:build": "npx @cloudflare/next-on-pages"
+    "pages:build": "npx @cloudflare/next-on-pages && echo '_worker.js' > .vercel/output/static/.assetsignore"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
