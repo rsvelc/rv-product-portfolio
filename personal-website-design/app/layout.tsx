@@ -26,6 +26,8 @@ const _dmSans = DM_Sans({
   variable: '--font-dm-sans'
 });
 
+export const runtime = 'edge'
+
 export const metadata: Metadata = {
   title: 'Ramya Velchuri | Product Leader',
   description: 'Product leader with an MBA from Kellogg and a background in Computer Science, blending business, technology, and arts.',
