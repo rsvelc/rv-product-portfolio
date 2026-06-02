@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { Train } from "lucide-react"
+import { SectionPlanets } from "@/components/section-planets"
 
 interface MilestoneProps {
   period: string
@@ -185,7 +186,8 @@ export function JourneySection() {
   }, [startJourneyAnimation])
 
   return (
-    <section id="journey" className="pt-8 pb-24" style={{ backgroundColor: '#E8F0F9' }}>
+    <section id="journey" className="pt-8 pb-24 relative" style={{ backgroundColor: '#E8F0F9' }}>
+      <SectionPlanets variant="journey" />
       <div className="mx-auto max-w-7xl px-6 lg:px-12">
         {/* Section Header */}
         <div className="text-center mb-16">

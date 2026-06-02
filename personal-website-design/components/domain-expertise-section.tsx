@@ -1,6 +1,7 @@
 "use client"
 
 import { Linkedin, Eye, Cloud, CreditCard, Shield } from "lucide-react"
+import { SectionPlanets } from "@/components/section-planets"
 
 interface DomainCard {
   lane: string
@@ -108,7 +109,8 @@ function DomainCardComponent({ card }: { card: DomainCard }) {
 
 export function DomainExpertiseSection() {
   return (
-    <section id="background" className="py-24" style={{ backgroundColor: '#E4EDF7' }}>
+    <section id="background" className="py-24 relative" style={{ backgroundColor: '#E4EDF7' }}>
+      <SectionPlanets variant="domain" />
       <div className="mx-auto max-w-7xl px-6 lg:px-12">
         {/* Section Header */}
         <div className="text-center mb-12">

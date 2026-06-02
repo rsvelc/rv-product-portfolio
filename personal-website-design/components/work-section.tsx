@@ -1,6 +1,7 @@
 "use client"
 
 import { ExternalLink } from "lucide-react"
+import { SectionPlanets } from "@/components/section-planets"
 
 interface WorkItem {
   title: string
@@ -198,7 +199,8 @@ function WorkCard({ category }: { category: Category }) {
 
 export function WorkSection() {
   return (
-    <section id="work" className="py-24" style={{ backgroundColor: '#EEF4FB' }}>
+    <section id="work" className="py-24 relative" style={{ backgroundColor: '#EEF4FB' }}>
+      <SectionPlanets variant="work" />
       <div className="mx-auto max-w-7xl px-6 lg:px-12">
         {/* Section Header */}
         <div className="text-center mb-12">
