@@ -166,18 +166,30 @@ export function DomainExpertiseSection() {
 
             {/* Right CTA */}
             <div className="flex flex-col items-center justify-center p-8 lg:p-10 lg:w-80 border-t lg:border-t-0 border-border">
-              <p className="font-serif italic text-sm text-muted-foreground text-center mb-6">
+              <p className="font-serif italic text-sm text-muted-foreground text-center mb-4">
                 I&apos;m always curious about insightful conversations on this.
               </p>
               <a
                 href="https://www.linkedin.com/in/ramya-velchuri/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full hover:bg-primary/90 transition-colors mb-4"
               >
                 <Linkedin className="w-4 h-4" />
                 <span className="text-sm font-medium">Let&apos;s connect</span>
               </a>
+              <div className="flex flex-col gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-3 mt-1">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500" />
+                  </span>
+                  <span className="text-xs font-semibold text-green-700 uppercase tracking-wide" style={{ fontFamily: 'var(--font-dm-sans), sans-serif' }}>Available for Work</span>
+                </div>
+                <p className="text-xs text-green-800 leading-relaxed" style={{ fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                  Open to product roles at the intersection of AI, infrastructure, and enterprise software. If you think there&apos;s a fit, I&apos;d love to connect.
+                </p>
+              </div>
             </div>
           </div>
         </div>
