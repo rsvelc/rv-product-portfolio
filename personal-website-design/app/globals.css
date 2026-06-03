@@ -76,9 +76,10 @@
 
 @theme inline {
   --font-sans: var(--font-geist-sans), 'Geist', system-ui, sans-serif;
-  --font-serif: var(--font-playfair), 'Playfair Display', Georgia, serif;
+  --font-serif: var(--font-cabin), 'Cabin', system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), 'Geist Mono', monospace;
   --font-fraunces: var(--font-fraunces), 'Fraunces', Georgia, serif;
+  --font-cabin: var(--font-cabin), 'Cabin', system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

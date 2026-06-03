@@ -207,20 +207,21 @@ export function SectionPlanets({ variant }: { variant: SectionPlanetsVariant }) 
             </svg>
           </div>
 
-          {/* Uranus - bottom right */}
+          {/* Mars - bottom right */}
           <div
-            className="absolute sp-lazy-roll"
-            style={{ bottom: "6%", right: "8%", width: "45px", height: "45px" }}
+            className="absolute sp-bounce-tough"
+            style={{ bottom: "6%", right: "8%", width: "38px", height: "38px" }}
           >
-            <svg viewBox="0 0 45 45" className="w-full h-full">
-              <circle cx="22.5" cy="22.5" r="18" fill="#7DD3D3" />
-              <circle cx="22.5" cy="22.5" r="16" fill="#9DE8E8" />
-              <ellipse cx="22.5" cy="22.5" rx="3" ry="22" fill="none" stroke="#B8F0F0" strokeWidth="2.5" opacity="0.5" />
-              <path d="M16 19 Q18 17 20 19" stroke="#4AABAB" strokeWidth="1.5" fill="none" />
-              <path d="M25 19 Q27 17 29 19" stroke="#4AABAB" strokeWidth="1.5" fill="none" />
-              <ellipse cx="22.5" cy="27" rx="4" ry="2" fill="#4AABAB" opacity="0.4" />
-              <text x="32" y="15" fill="#4AABAB" fontSize="6" fontWeight="bold">z</text>
-              <text x="36" y="12" fill="#4AABAB" fontSize="5" fontWeight="bold">z</text>
+            <svg viewBox="0 0 38 38" className="w-full h-full">
+              <circle cx="19" cy="19" r="15" fill="#CD5C5C" />
+              <circle cx="19" cy="19" r="13" fill="#E07B7B" />
+              <circle cx="14" cy="15" r="2.5" fill="#B84848" />
+              <circle cx="24" cy="21" r="2" fill="#B84848" />
+              <path d="M12 12 L26 12" stroke="#8B3A3A" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="14" cy="17" r="1.5" fill="#8B3A3A" />
+              <circle cx="24" cy="17" r="1.5" fill="#8B3A3A" />
+              <path d="M15 24 L23 24" stroke="#8B3A3A" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="32" cy="28" r="4" fill="#E07B7B" />
             </svg>
           </div>
 

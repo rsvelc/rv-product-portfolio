@@ -17,32 +17,32 @@ const domainCards: DomainCard[] = [
     lane: "LANE 01",
     icon: <Eye className="w-5 h-5" />,
     title: "Observability",
-    description: "Product Manager for an in-house, full-stack observability platform integrating metrics, logs, and traces in a unified AI platform — enabling proactive incident detection for 5,000+ consumer banking applications. Fully leveraged OpenTelemetry instrumentation to standardize telemetry across these applications.",
-    skills: ["OpenTelemetry", "Prometheus", "Grafana", "Jaeger", "Splunk", "Datadog", "Dynatrace", "Elastic", "Distributed tracing", "TSDB", "APM", "SLO/SLA", "SRE", "Load testing", "BDD", "Microservice Architecture", "ML-native platforms"],
+    description: "Owned the vision and roadmap for an in-house observability platform unifying metrics, logs, and traces into a single AI-powered experience, enabling proactive incident detection across 5,000+ consumer banking applications. Leveraged OpenTelemetry to standardize telemetry collection across legacy and modern systems.",
+    skills: ["OpenTelemetry", "Prometheus", "Grafana", "Jaeger", "Splunk", "Datadog", "Dynatrace", "Elastic", "Distributed tracing", "TSDB", "APM", "SLO/SLA", "SRE", "Microservice Architecture", "Anomaly detection", "SLO-based alerting"],
     gradient: "linear-gradient(135deg, #0F2D52 0%, #1A4A7A 100%)",
   },
   {
     lane: "LANE 02",
     icon: <Cloud className="w-5 h-5" />,
     title: "Cloud Infrastructure (AWS)",
-    description: "AWS and CKAD certified, with deep expertise in Kubernetes. Responsible for driving enterprise-level AWS cloud migration from on-premise infrastructure — drove early AWS adoption by designing cloud optimization strategies, API-enabled integration runbooks, DR plans, and chaos engineering tests.",
-    skills: ["AWS (EC2, EKS, S3, CloudWatch, Lambda, IAM)", "Kubernetes", "CKAD", "AWS Solutions Architect", "Terraform", "Chaos engineering", "DR planning", "CI/CD", "Cloud-Native Application Patterns", "Platform Engineering", "FinOps", "DevOps", "IaaS", "SaaS"],
+    description: "Curiosity about cloud infrastructure led me to pursue AWS Solutions Architect and CKAD certifications, while gaining hands-on experience with Docker and Cloud Foundry. That interest eventually led me to take ownership of an enterprise AWS migration initiative, where I drove early cloud adoption by designing optimization strategies, API integration playbooks, disaster recovery plans, and chaos engineering frameworks.",
+    skills: ["AWS (EC2, EKS, S3, CloudWatch, Lambda, IAM)", "Kubernetes", "CKAD", "AWS Solutions Architect", "Terraform", "Docker", "Cloud Foundry", "Chaos engineering", "DR planning", "CI/CD", "Cloud-Native Application Patterns", "Platform Engineering", "FinOps", "DevOps", "IaaS", "SaaS"],
     gradient: "linear-gradient(135deg, #1A4A7A 0%, #1E5799 100%)",
   },
   {
     lane: "LANE 03",
     icon: <CreditCard className="w-5 h-5" />,
     title: "Payments",
-    description: "Designed an RSA-based authorization workflow for bulk payments by merchant accounts. Worked across payment infrastructure and roadmaps to increase system reliability and reduce data loss at high transaction volumes.",
-    skills: ["RSA authorization", "Bulk payments", "Merchant infrastructure", "Payment reliability", "High-volume pipelines", "Agile", "RESTful APIs", "Spring Boot", "Java", "Python", "SQL"],
+    description: "Rising payment failures and fraud across SMB merchant accounts highlighted a broader challenge: balancing security with a seamless payment experience. As part of the strategy team, I helped design an RSA-based authorization workflow for bulk payments and worked across payment infrastructure roadmaps to improve system reliability at scale.",
+    skills: ["RSA authorization", "Bulk payments", "Merchant infrastructure", "Payment reliability", "High-volume pipelines", "Agile", "RESTful APIs", "Spring Boot", "Java", "BDD"],
     gradient: "linear-gradient(135deg, #1E5799 0%, #2563A8 100%)",
   },
   {
     lane: "LANE 04",
     icon: <Shield className="w-5 h-5" />,
     title: "Risk, Compliance & Governance",
-    description: "Played a critical role in identifying personally identifiable information (PII) within logging systems. Took ownership of the problem end-to-end — designed a data masking platform to control data leakage within JPMC systems before it became a regulatory issue.",
-    skills: ["PII detection", "Data masking", "GDPR/CCPA", "Logging governance", "Risk standards", "Data leak prevention", "Compliance-first design"],
+    description: "While analyzing application logs, I discovered sensitive customer information being exposed through internal logging systems. What started as a monitoring issue quickly revealed a broader compliance and regulatory risk. I took ownership of the problem end-to-end, designing a data masking platform that prevented PII leakage across JPMC systems before it became a regulatory incident.",
+    skills: ["PII detection", "Data masking", "GDPR/CCPA", "Logging governance", "Risk standards", "Data leak prevention", "Compliance-first design", "High-volume data pipelines", "Kafka", "NLP", "Python", "SQL", "ReactJS"],
     gradient: "linear-gradient(135deg, #2563A8 0%, #3A7DC9 100%)",
   },
 ]
@@ -140,22 +140,22 @@ export function DomainExpertiseSection() {
               <h3 className="font-serif text-2xl font-medium text-primary mb-4">
                 Questions I&apos;m chasing
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+              <p className="text-sm text-muted-foreground leading-relaxed mb-6" style={{ fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                 With the rapid adoption of AI, I&apos;m thinking about what changes if the infrastructure I touched was replaced by autonomous workflows. These are the questions I don&apos;t have answers to yet.
               </p>
-              
+
               {/* Questions Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {lookingForwardQuestions.map((question, idx) => (
                   <div key={idx} className="flex items-start gap-3">
                     <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                    <p className="text-sm text-foreground">{question}</p>
+                    <p className="text-sm text-foreground" style={{ fontFamily: 'var(--font-dm-sans), sans-serif' }}>{question}</p>
                   </div>
                 ))}
               </div>
 
               {/* Upskilling */}
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground" style={{ fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                 <span className="font-medium">Upskilling:</span>
                 <span>Agentic Workflows, LLMOps and Evals</span>
               </div>
