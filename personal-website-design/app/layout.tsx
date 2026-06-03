@@ -20,7 +20,7 @@ const _fraunces = Fraunces({
   weight: ['400'],
   style: ['italic']
 });
-const _dmSans = DM_Sans({ 
+const _dmSans = DM_Sans({
   subsets: ["latin"],
   variable: '--font-dm-sans'
 });
@@ -32,19 +32,10 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
+        url: '/favicon.svg',
         type: 'image/svg+xml',
       },
     ],
-    apple: '/apple-icon.png',
   },
 }
 

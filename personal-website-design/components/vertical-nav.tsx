@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react"
 
 const sections = [
-  { id: "home", label: "Landing" },
-  { id: "journey", label: "How did I get here" },
-  { id: "work", label: "What I am building" },
+  { id: "home", label: "Home" },
   { id: "background", label: "Where I've built" },
+  { id: "work", label: "What I am building" },
+  { id: "journey", label: "How did I get here" },
   { id: "footer", label: "What's next" },
 ]
 

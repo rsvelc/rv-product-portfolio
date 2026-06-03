@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
 const tags = [
+  "Empathy before technology",
   "Astronomy buff",
-  "Daughter of a single mother",
-  "Empathy before technology"
+  "Proud daughter of a single mother",
 ]
 
 export function HeroContent() {
@@ -13,7 +13,7 @@ export function HeroContent() {
     <div className="flex flex-col justify-center max-w-xl">
       <span className="text-lg text-muted-foreground mb-2">Hey there,</span>
       
-      <h1 className="font-serif text-5xl lg:text-6xl xl:text-7xl font-normal leading-tight mb-6">
+      <h1 className="text-5xl lg:text-6xl xl:text-7xl font-normal leading-tight mb-6" style={{ fontFamily: 'var(--font-playfair)' }}>
         <span className="italic">{"I'm "}</span>
         <span className="text-primary font-medium italic">Ramya</span>
         <br />

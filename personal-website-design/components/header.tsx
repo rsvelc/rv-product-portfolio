@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Linkedin, Github, Mail, Copy, Check } from "lucide-react"
+import { Linkedin, Github, Mail, Copy, Check, ExternalLink } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -55,7 +55,7 @@ export function Header() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
           <nav className="flex items-center justify-between py-4">
-            <a href="/" className="italic text-[1.5rem]" style={{ fontFamily: 'var(--font-fraunces)', fontWeight: 400, color: '#0F2D52' }}>
+            <a href="/" className="italic text-[1.5rem]" style={{ fontFamily: 'var(--font-playfair)', fontWeight: 400, color: '#0F2D52' }}>
               Ramya Velchuri.
             </a>
             
@@ -108,27 +108,39 @@ export function Header() {
           <DialogHeader>
             <DialogTitle>{dialogContent.title}</DialogTitle>
           </DialogHeader>
-          <div className="flex items-center gap-3 mt-4">
-            <div className="flex-1 bg-muted rounded-lg px-4 py-3">
-              <span className="text-foreground font-medium">{dialogContent.value}</span>
+          <div className="flex flex-col gap-3 mt-4">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 bg-muted rounded-lg px-4 py-3">
+                <span className="text-foreground font-medium">{dialogContent.value}</span>
+              </div>
+              <Button
+                onClick={copyToClipboard}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy
+                  </>
+                )}
+              </Button>
             </div>
-            <Button
-              onClick={copyToClipboard}
-              variant="outline"
-              className="flex items-center gap-2"
+            <a
+              href={`mailto:${dialogContent.value}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-2 text-sm text-primary hover:underline"
             >
-              {copied ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  Copy
-                </>
-              )}
-            </Button>
+              <ExternalLink className="w-4 h-4" />
+              Email Ramya
+            </a>
           </div>
         </DialogContent>
       </Dialog>
