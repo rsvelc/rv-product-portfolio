@@ -55,7 +55,13 @@ export function HeroContent() {
         >
           <Link href="#journey">Journey</Link>
         </Button>
-        <Button 
+        <Button
+          className="rounded-full px-5 py-5 bg-primary text-primary-foreground hover:bg-primary/90"
+          asChild
+        >
+          <Link href="#whats-next">What&apos;s next</Link>
+        </Button>
+        <Button
           className="rounded-full px-5 py-5 bg-primary text-primary-foreground hover:bg-primary/90"
           asChild
         >

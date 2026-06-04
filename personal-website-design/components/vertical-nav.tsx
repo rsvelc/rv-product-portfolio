@@ -7,7 +7,7 @@ const sections = [
   { id: "background", label: "Where I've built" },
   { id: "work", label: "What I am building" },
   { id: "journey", label: "How I got here" },
-  { id: "footer", label: "What's next" },
+  { id: "whats-next", label: "What's next" },
 ]
 
 export function VerticalNav() {

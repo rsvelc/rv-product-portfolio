@@ -11,6 +11,11 @@ export function VennDiagram() {
         </h2>
       </div>
 
+      {/* Venn Diagram Label */}
+      <p className="text-center text-[10px] uppercase tracking-widest text-muted-foreground mb-3 opacity-60">
+        ↓ Venn diagram
+      </p>
+
       {/* Venn Diagram Container */}
       <div className="relative w-full" style={{ height: '420px' }}>
         {/* Business Circle (top center) */}
