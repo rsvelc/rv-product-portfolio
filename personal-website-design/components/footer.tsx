@@ -1,15 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Linkedin, Github, Mail, FileText, Bug } from "lucide-react"
 
 export function Footer() {
-  const [isMac, setIsMac] = useState(false)
-  const [showEmailTooltip, setShowEmailTooltip] = useState(false)
-
-  useEffect(() => {
-    setIsMac(navigator.platform.toUpperCase().indexOf('MAC') >= 0)
-  }, [])
 
   return (
     <footer id="whats-next" className="py-16" style={{ backgroundColor: '#DFE9F5' }}>
@@ -29,22 +22,15 @@ export function Footer() {
 
           {/* Social Icons */}
           <div className="flex items-center justify-center gap-4 mb-8">
-            <div className="relative">
-              <a
-                href="mailto:ramyasree0299@gmail.com"
-                className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
-                aria-label="Email"
-                onMouseEnter={() => setShowEmailTooltip(true)}
-                onMouseLeave={() => setShowEmailTooltip(false)}
-              >
-                <Mail className="w-5 h-5" />
-              </a>
-              {showEmailTooltip && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-primary text-primary-foreground rounded whitespace-nowrap">
-                  {isMac ? '⌘C' : 'Ctrl+C'}
-                </div>
-              )}
-            </div>
+            <a
+              href="https://mail.google.com/mail/?view=cm&to=ramyasree0299@gmail.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
+              aria-label="Email"
+            >
+              <Mail className="w-5 h-5" />
+            </a>
             <a
               href="https://www.linkedin.com/in/ramya-velchuri/"
               target="_blank"
@@ -64,7 +50,7 @@ export function Footer() {
               <Github className="w-5 h-5" />
             </a>
             <a
-              href="https://github.com/rsvelc/rv-product-portfolio/raw/main/Resume/Ramya_Velchuri.docx"
+              href="https://github.com/rsvelc/rv-product-portfolio/raw/main/Resume/Ramya_Velchuri.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-accent transition-colors"

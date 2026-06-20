@@ -65,7 +65,7 @@ export function HeroContent() {
           className="rounded-full px-5 py-5 bg-primary text-primary-foreground hover:bg-primary/90"
           asChild
         >
-          <a href="https://github.com/rsvelc/rv-product-portfolio/raw/main/Resume/Ramya_Velchuri.docx" target="_blank" rel="noopener noreferrer">Resume</a>
+          <a href="https://github.com/rsvelc/rv-product-portfolio/raw/main/Resume/Ramya_Velchuri.pdf" target="_blank" rel="noopener noreferrer">Resume</a>
         </Button>
       </div>
     </div>
