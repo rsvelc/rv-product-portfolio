@@ -205,6 +205,15 @@ const milestones = [
     image: "/amazon_intern.jpg",
     imagePosition: "object-cover object-center",
   },
+  {
+    period: "Northwestern Kellogg",
+    location: "Evanston, IL",
+    description: "Kellogg Graduation. This one took 5 years of wanting, 2 of living, and a lifetime of people who made it matter.",
+    position: "top" as const,
+    tilt: "left" as const,
+    image: "/kellogg_graduation.jpg",
+    imagePosition: "object-cover object-top",
+  },
 ]
 
 export function JourneySection() {
