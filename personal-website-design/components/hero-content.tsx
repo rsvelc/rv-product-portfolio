@@ -21,7 +21,7 @@ export function HeroContent() {
       </h1>
       
       <p className="text-lg text-foreground leading-relaxed mb-6">
-        Just a Product-minded, outcome-oriented human with an MBA from Kellogg, a Bachelor&apos;s in Computer Science, who pours heart into the arts. Trained singer, recently turned into a theatre kid.
+        Just an outcome-oriented human with an MBA from Kellogg, a Bachelor&apos;s in Computer Science, who pours heart into the arts. Trained singer, recently turned into a theatre kid.
       </p>
       
       <div className="flex flex-wrap gap-2 mb-8">
